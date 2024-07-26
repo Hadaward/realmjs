@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 public class Realm {
-    private final NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+    private static final NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+    private static final NashornScriptEngine internalEngine = (NashornScriptEngine) factory.getScriptEngine("--language=es6", "-strict=true");
+
     private final NashornScriptEngine engine = (NashornScriptEngine) factory.getScriptEngine(
             "--language=es6",
             "-scripting=false",
@@ -20,6 +22,10 @@ public class Realm {
             "--no-java",
             "--no-syntax-extensions"
     );
+
+    public static Object getJavaModule(String module) throws ScriptException {
+        return internalEngine.eval("Java.type(\""+module.replaceAll("[^a-zA-Z0-9.*_]", "")+"\")");
+    }
 
     public void start(Class<?> mainClass, String entryPath) throws IOException, ScriptException {
         var path = Paths.get(entryPath);

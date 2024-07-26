@@ -1,9 +1,11 @@
 package com.github.hadaward.realmjs.api;
 
+import com.github.hadaward.realmjs.Realm;
 import com.github.hadaward.realmjs.api.javascript.ConsoleObject;
 import com.github.hadaward.realmjs.api.javascript.GlobalObject;
 import com.github.hadaward.realmjs.api.javascript.ModuleObject;
 import com.github.hadaward.realmjs.api.javascript.interfaces.ISetTimeoutFunction;
+import com.github.hadaward.realmjs.api.registries.JavaModuleRegistry;
 import com.github.hadaward.realmjs.api.registries.ModuleRegistry;
 import com.github.hadaward.realmjs.util.ResourceLoader;
 
@@ -51,6 +53,20 @@ public class Module {
     }
 
     public Object require(String path) {
+        if (path.startsWith("@java/")) {
+            var javaModule = path.substring(6);
+
+            if (!JavaModuleRegistry.hasCache(javaModule)) {
+                try {
+                    JavaModuleRegistry.register(javaModule, Realm.getJavaModule(javaModule));
+                } catch (ScriptException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            return JavaModuleRegistry.get(javaModule);
+        }
+
         var fullPath = Paths.get(relativePath, path);
 
         if (Files.isDirectory(fullPath)) {
